@@ -33,6 +33,9 @@ jobs:
       - name: Install TTS generator
         run: npm install --no-package-lock --no-audit --no-fund
 
+      - name: Run tests
+        run: npm test
+
       - name: Generate and clean audio
         run: npm run generate:audio
 
