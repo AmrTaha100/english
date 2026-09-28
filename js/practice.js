@@ -79,6 +79,10 @@ export function exitPractice() {
 
   state.practiceIndex = 0;
 
+  el.modeScreen
+    .querySelector('[data-action="start-exam"]')
+    ?.focus();
+
   window.scrollTo({
     top: 0,
     behavior: "smooth"
