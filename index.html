@@ -478,7 +478,10 @@
 
     <div class="exam">
 
-        <aside class="sidebar">
+        <aside
+            class="sidebar"
+            id="questionsPanel"
+            aria-label="التنقل بين الأسئلة">
 
             <div class="sidebar-title">
 
@@ -487,6 +490,16 @@
                 <span class="counter" id="sideCounter" aria-live="polite">
                     1 / 38
                 </span>
+
+                <button
+                    class="mobile-question-close"
+                    type="button"
+                    data-action="close-mobile-questions"
+                    aria-label="إغلاق قائمة الأسئلة">
+
+                    ×
+
+                </button>
 
             </div>
 
@@ -513,16 +526,40 @@
 
                     </div>
 
-                    <button
-                        class="exit-exam"
-                        data-action="show-exit-confirm"
-                        type="button"
-                        title="الخروج والعودة لاختيار طريقة أخرى">
+                    <div class="exam-top-actions">
 
-                        <span class="exit-icon">×</span>
-                        <span>خروج</span>
+                        <button
+                            class="mobile-question-toggle"
+                            type="button"
+                            data-action="toggle-mobile-questions"
+                            aria-expanded="false"
+                            aria-controls="questionsPanel">
 
-                    </button>
+                            ☷
+                            <span>الأسئلة</span>
+
+                        </button>
+
+                        <button
+                            class="exit-exam"
+                            data-action="show-exit-confirm"
+                            type="button"
+                            title="الخروج والعودة لاختيار طريقة أخرى">
+
+                            <span class="exit-icon">×</span>
+                            <span>خروج</span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="exam-progress-bar"
+                    aria-hidden="true">
+
+                    <span id="examProgressBar"></span>
 
                 </div>
 
@@ -589,6 +626,12 @@
             </div>
 
         </main>
+
+        <div
+            class="mobile-questions-backdrop"
+            data-action="close-mobile-questions"
+            aria-hidden="true">
+        </div>
 
     </div>
 
