@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Vocabulary Master 5.3</title>
 
@@ -30,7 +30,7 @@
      MODE SCREEN — NEW DESIGN
 ===================================================== -->
 
-<section class="mode-screen" id="modeScreen">
+<section class="mode-screen" id="modeScreen" aria-labelledby="appTitle" aria-busy="true" data-loading="true">
 
     <div class="mode-container">
 
@@ -75,7 +75,7 @@
                 <span></span>
             </div>
 
-            <h1>
+            <h1 id="appTitle">
                 Vocabulary
                 <strong>Master</strong>
             </h1>
@@ -84,7 +84,7 @@
                 اختبر مستواك في الكلمات
             </p>
 
-            <div class="word-count">
+            <div class="word-count" aria-label="عدد الكلمات">
                 <span class="count-number" id="vocabCount">0</span>
                 <span>WORDS</span>
                 <i></i>
@@ -94,13 +94,37 @@
         </div>
 
 
+        <div
+            class="load-state"
+            id="loadingState"
+            role="status"
+            aria-live="polite">
+            ⏳ جاري تحميل الكلمات...
+        </div>
+
+        <div
+            class="load-error"
+            id="loadError"
+            role="alert"
+            hidden>
+            <strong>حصلت مشكلة في تحميل الكلمات.</strong>
+            <span>تأكد من الاتصال وحاول مرة تانية.</span>
+            <button
+                class="btn btn-secondary retry-load"
+                type="button"
+                data-action="retry-load">
+                إعادة المحاولة
+            </button>
+        </div>
+
+
         <div class="mode-cards">
 
             <!-- Arabic → English -->
 
             <button
                 class="mode-card primary-mode"
-                data-action="start-exam" data-mode="ar-en">
+                data-action="start-exam" data-mode="ar-en" disabled>
 
                 <div class="card-glow"></div>
 
@@ -158,7 +182,7 @@
 
             <button
                 class="mode-card"
-                data-action="start-exam" data-mode="en-ar">
+                data-action="start-exam" data-mode="en-ar" disabled>
 
                 <div class="card-glow"></div>
 
@@ -214,7 +238,7 @@
 
             <button
                 class="mode-card"
-                data-action="start-exam" data-mode="mixed">
+                data-action="start-exam" data-mode="mixed" disabled>
 
                 <div class="card-glow"></div>
 
@@ -284,7 +308,7 @@
 
             <button
                 class="mode-card practice-mode"
-                data-action="start-practice">
+                data-action="start-practice" disabled>
 
                 <div class="card-glow"></div>
 
@@ -348,7 +372,7 @@
      PRACTICE SCREEN
 ===================================================== -->
 
-<section class="practice-screen" id="practiceScreen">
+<section class="practice-screen" id="practiceScreen" aria-labelledby="practiceTitle">
 
     <div class="practice-container">
 
@@ -364,16 +388,16 @@
 
             </button>
 
-            <div class="practice-progress" id="practiceProgress">
+            <div class="practice-progress" id="practiceProgress" role="status" aria-live="polite">
                 1 / 38
             </div>
 
         </div>
 
 
-        <div class="practice-card">
+        <div class="practice-card" aria-live="polite">
 
-            <div class="practice-badge">
+            <div class="practice-badge" id="practiceTitle">
                 📚 PRACTICE MODE
             </div>
 
@@ -416,7 +440,7 @@
             </div>
 
 
-            <div class="practice-actions">
+            <div class="practice-actions" aria-label="تنقل المذاكرة">
 
                 <button
                     class="btn btn-secondary"
@@ -459,7 +483,7 @@
 
                 <h3>الأسئلة</h3>
 
-                <span class="counter" id="sideCounter">
+                <span class="counter" id="sideCounter" aria-live="polite">
                     1 / 28
                 </span>
 
@@ -482,7 +506,7 @@
                             🧠 عربي → إنجليزي
                         </div>
 
-                        <div class="progress-text" id="progressText">
+                        <div class="progress-text" id="progressText" role="status" aria-live="polite">
                             السؤال 1 من 38
                         </div>
 
@@ -502,11 +526,11 @@
                 </div>
 
 
-                <div class="question-area">
+                <div class="question-area" aria-live="polite">
 
-                    <div class="question-label">
+                    <label class="question-label" for="answerInput">
                         اكتب الترجمة:
-                    </div>
+                    </label>
 
                     <div
                         class="question-text"
@@ -516,7 +540,8 @@
                     <button
                         class="speaker"
                         id="speakerBtn"
-                        data-action="speak-exam"
+                        type="button"
+                        data-action="speak-exam" aria-label="تشغيل النطق الإنجليزي"
                         title="النطق الإنجليزي">
 
                         🔊
@@ -542,7 +567,7 @@
 
                         <button
                             class="btn btn-secondary"
-                            data-action="skip-question">
+                            type="button" data-action="skip-question">
 
                             تخطي
 
@@ -550,7 +575,7 @@
 
                         <button
                             class="btn btn-primary"
-                            data-action="submit-answer">
+                            type="button" data-action="submit-answer">
 
                             تأكيد الإجابة
                         </button>
@@ -572,7 +597,7 @@
      RESULTS
 ===================================================== -->
 
-<section class="results-screen" id="resultsScreen">
+<section class="results-screen" id="resultsScreen" aria-labelledby="resultsTitle">
 
     <div class="results">
 
@@ -580,7 +605,7 @@
             🏆
         </div>
 
-        <h1>خلصت الاختبار 🎉</h1>
+        <h1 id="resultsTitle">خلصت الاختبار 🎉</h1>
 
         <p class="result-subtitle">
             دي نتيجتك النهائية
