@@ -81,6 +81,16 @@ export function startExam(selectedMode) {
   el.examScreen.style.display = "block";
   el.resultsScreen.style.display = "none";
 
+  // On phones, the home screen may have been scrolled down to the mode card.
+  // Start the exam from the top instead of inheriting that scroll position.
+  if (window.innerWidth <= 900) {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto"
+    });
+  }
+
   createQuestionGrid();
   showQuestion();
 }
@@ -279,7 +289,17 @@ export function showQuestion() {
   el.answerInput.enterKeyHint = "done";
   el.answerInput.inputMode = "text";
   el.answerInput.value = "";
-  el.answerInput.focus();
+
+  // Prevent mobile browsers from scrolling the whole page to the focused input.
+  // The exam already has its intended scroll position.
+  try {
+    el.answerInput.focus({
+      preventScroll: true
+    });
+  } catch (error) {
+    // Older browsers may not support the focus options object.
+    el.answerInput.focus();
+  }
 }
 
 function findNextUnanswered() {
