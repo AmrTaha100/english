@@ -31,18 +31,27 @@ function updateSpeakerState(
 
 export function stopCurrentAudio() {
   if (currentAudio) {
+    const audio = currentAudio;
+    currentAudio = null;
+
+    // Detach handlers before clearing the source.
+    // Clearing src can fire "error" and must not trigger TTS fallback
+    // when the stop was intentional (for example, while changing questions).
+    audio.onplay = null;
+    audio.onended = null;
+    audio.onerror = null;
+
     try {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute("src");
+      audio.load();
     } catch (error) {
       console.warn(
         "Could not stop generated audio:",
         error
       );
     }
-
-    currentAudio.src = "";
-    currentAudio = null;
   }
 
   if ("speechSynthesis" in window) {
