@@ -825,6 +825,18 @@ input:focus-visible {
   min-width: 0;
 }
 
+.exam-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-question-toggle,
+.mobile-question-close,
+.exam-progress-bar {
+  display: none;
+}
+
 .mode-badge {
   padding: 9px 13px;
   overflow: hidden;
