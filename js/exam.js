@@ -13,6 +13,7 @@ import {
 import { saveAttemptStats } from "./stats.js";
 
 let lastFocusedElement = null;
+let mobileQuestionsLastFocusedElement = null;
 
 function getElements() {
   return {
@@ -33,7 +34,13 @@ function getElements() {
     sideCounter:
       document.getElementById("sideCounter"),
     modeBadge:
-      document.getElementById("modeBadge")
+      document.getElementById("modeBadge"),
+    examProgressBar:
+      document.getElementById("examProgressBar"),
+    questionsPanel:
+      document.getElementById("questionsPanel"),
+    mobileQuestionsToggle:
+      document.querySelector(".mobile-question-toggle")
   };
 }
 
@@ -92,6 +99,7 @@ export function startExam(selectedMode) {
   }
 
   createQuestionGrid();
+  closeMobileQuestions();
   showQuestion();
 }
 
@@ -150,6 +158,7 @@ export function hideExitConfirm(
 
 export function confirmExitExam() {
   setSpeakerVisibility(false);
+  closeMobileQuestions();
   hideExitConfirm(false);
 
   if ("speechSynthesis" in window) {
@@ -199,11 +208,97 @@ export function createQuestionGrid() {
 
         state.currentIndex = index;
         showQuestion();
+
+        if (window.innerWidth <= 900) {
+          closeMobileQuestions();
+        }
       }
     );
 
     el.questionGrid.appendChild(btn);
   });
+}
+
+export function toggleMobileQuestions() {
+  const el = getElements();
+
+  if (
+    !el.examScreen ||
+    window.innerWidth > 900
+  ) {
+    return;
+  }
+
+  if (
+    el.examScreen.classList.contains(
+      "mobile-questions-open"
+    )
+  ) {
+    closeMobileQuestions();
+    return;
+  }
+
+  mobileQuestionsLastFocusedElement =
+    document.activeElement;
+
+  el.examScreen.classList.add(
+    "mobile-questions-open"
+  );
+  document.body.classList.add(
+    "mobile-questions-open"
+  );
+
+  if (el.mobileQuestionsToggle) {
+    el.mobileQuestionsToggle.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+  }
+
+  const currentButton =
+    el.questionGrid.children[
+      state.currentIndex
+    ];
+
+  setTimeout(
+    () => {
+      (currentButton || el.questionGrid.querySelector(".q-number"))?.focus();
+    },
+    30
+  );
+}
+
+export function closeMobileQuestions() {
+  const el = getElements();
+
+  if (el.examScreen) {
+    el.examScreen.classList.remove(
+      "mobile-questions-open"
+    );
+  }
+
+  document.body.classList.remove(
+    "mobile-questions-open"
+  );
+
+  if (el.mobileQuestionsToggle) {
+    el.mobileQuestionsToggle.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+  }
+
+  if (
+    mobileQuestionsLastFocusedElement &&
+    typeof mobileQuestionsLastFocusedElement.focus === "function" &&
+    document.body.contains(
+      mobileQuestionsLastFocusedElement
+    )
+  ) {
+    mobileQuestionsLastFocusedElement.focus();
+  }
+
+  mobileQuestionsLastFocusedElement = null;
 }
 
 export function showQuestion() {
@@ -249,6 +344,16 @@ export function showQuestion() {
     (state.currentIndex + 1) +
     " / " +
     state.questions.length;
+
+  if (el.examProgressBar) {
+    const percent =
+      state.questions.length
+        ? ((state.currentIndex + 1) / state.questions.length) * 100
+        : 0;
+
+    el.examProgressBar.style.width =
+      percent + "%";
+  }
 
   if (q.direction === "ar-en") {
     el.modeBadge.textContent =
@@ -571,6 +676,7 @@ function renderDirectionScores(
 export function finishExam() {
   stopCurrentAudio();
   setSpeakerVisibility(false);
+  closeMobileQuestions();
 
   const el = getElements();
 
