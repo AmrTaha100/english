@@ -251,6 +251,8 @@ export function showQuestion() {
       "english-input"
     );
 
+    el.answerInput.dir = "ltr";
+    el.answerInput.lang = "en";
     el.answerInput.placeholder =
       "اكتب الترجمة بالإنجليزي...";
   } else {
@@ -268,10 +270,14 @@ export function showQuestion() {
       "english-input"
     );
 
+    el.answerInput.dir = "rtl";
+    el.answerInput.lang = "ar";
     el.answerInput.placeholder =
       "اكتب الترجمة بالعربي...";
   }
 
+  el.answerInput.enterKeyHint = "done";
+  el.answerInput.inputMode = "text";
   el.answerInput.value = "";
   el.answerInput.focus();
 }
