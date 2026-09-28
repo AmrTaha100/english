@@ -1332,7 +1332,7 @@ input:focus-visible {
 
   .sidebar {
     position: static;
-    padding: 12px 14px;
+    padding: 10px 12px;
   }
 
   .question-grid {
@@ -1340,6 +1340,7 @@ input:focus-visible {
     gap: 7px;
     overflow-x: auto;
     scrollbar-width: none;
+    padding: 2px 1px 4px;
   }
 
   .question-grid::-webkit-scrollbar {
@@ -1471,9 +1472,42 @@ input:focus-visible {
     width: 100%;
   }
 
-  .practice-screen,
-  .exam-screen {
+  .practice-screen {
     padding: 12px;
+  }
+
+  .exam-screen {
+    padding: 8px;
+  }
+
+  .exam {
+    gap: 9px;
+  }
+
+  .exam .sidebar {
+    border: 0;
+    background: rgba(15,23,42,.52);
+    box-shadow: none;
+    backdrop-filter: none;
+    border-radius: 16px;
+    padding: 8px 10px;
+  }
+
+  .exam .sidebar-title {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .exam .question-grid {
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+
+  .exam .q-number {
+    flex-basis: 33px;
+    min-height: 33px;
+    border-radius: 50%;
+    font-size: 10px;
   }
 
   .practice-card {
@@ -1522,21 +1556,28 @@ input:focus-visible {
   }
 
   .exam-top {
-    gap: 8px;
+    align-items: flex-start;
+    gap: 9px;
   }
 
   .exam-top-right {
-    gap: 7px;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
   }
 
   .mode-badge {
-    max-width: 60%;
+    max-width: 100%;
+    width: fit-content;
     padding: 8px 10px;
     font-size: 10px;
   }
 
   .progress-text {
     font-size: 10px;
+    white-space: normal;
   }
 
   .exit-exam {
@@ -1552,9 +1593,21 @@ input:focus-visible {
     font-size: 18px;
   }
 
+  .exam-card {
+    min-height: calc(100svh - 150px);
+    padding: 20px 16px 17px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
   .question-area {
-    min-height: 310px;
-    padding-top: 29px;
+    flex: 1;
+    min-height: 0;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .question-label {
@@ -1577,11 +1630,12 @@ input:focus-visible {
   }
 
   .answer-area {
-    padding-top: 25px;
+    margin-top: 0;
+    padding-top: 18px;
   }
 
   .answer-input {
-    min-height: 57px;
+    min-height: 58px;
     padding: 14px 15px;
     font-size: 16px;
   }
@@ -1674,10 +1728,26 @@ input:focus-visible {
 
   .question-text {
     font-size: 24px;
+    line-height: 1.42;
   }
 
   .question-text.english {
     font-size: 22px;
+    line-height: 1.35;
+  }
+
+  .exam-card {
+    min-height: calc(100svh - 142px);
+    padding: 18px 14px 15px;
+  }
+
+  .exam .sidebar {
+    padding: 7px 8px;
+  }
+
+  .exam .q-number {
+    flex-basis: 31px;
+    min-height: 31px;
   }
 
   .answer-input {
