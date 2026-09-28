@@ -112,7 +112,9 @@ export function showExitConfirm() {
   }
 }
 
-export function hideExitConfirm() {
+export function hideExitConfirm(
+  restoreFocus = true
+) {
   const modal =
     document.getElementById("exitModal");
 
@@ -126,17 +128,19 @@ export function hideExitConfirm() {
   document.body.classList.remove("modal-open");
 
   if (
+    restoreFocus &&
     lastFocusedElement &&
     typeof lastFocusedElement.focus === "function"
   ) {
     lastFocusedElement.focus();
-    lastFocusedElement = null;
   }
+
+  lastFocusedElement = null;
 }
 
 export function confirmExitExam() {
   setSpeakerVisibility(false);
-  hideExitConfirm();
+  hideExitConfirm(false);
 
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
@@ -153,6 +157,10 @@ export function confirmExitExam() {
   el.examScreen.style.display = "none";
   el.resultsScreen.style.display = "none";
   el.modeScreen.style.display = "flex";
+
+  el.modeScreen
+    .querySelector('[data-action="start-exam"]')
+    ?.focus();
 
   window.scrollTo({
     top: 0,
@@ -601,6 +609,10 @@ export function finishExam() {
   );
 
   renderResults();
+
+  document
+    .querySelector('[data-action="restart"]')
+    ?.focus();
 }
 
 export function speakCurrent() {
