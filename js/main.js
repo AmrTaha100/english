@@ -207,20 +207,56 @@ function bindActions() {
   document.addEventListener(
     "keydown",
     event => {
-      if (event.key !== "Escape") {
-        return;
-      }
-
       const modal =
         document.getElementById(
           "exitModal"
         );
 
       if (
-        modal &&
-        modal.classList.contains("open")
+        !modal ||
+        !modal.classList.contains("open")
       ) {
+        return;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
         hideExitConfirm();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusable = [
+        modal.querySelector(".exit-modal-no"),
+        modal.querySelector(".exit-modal-yes")
+      ].filter(Boolean);
+
+      if (!focusable.length) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last =
+        focusable[focusable.length - 1];
+
+      if (
+        event.shiftKey &&
+        document.activeElement === first
+      ) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === last
+      ) {
+        event.preventDefault();
+        first.focus();
       }
     }
   );
