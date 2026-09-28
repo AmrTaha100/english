@@ -227,10 +227,14 @@ export function showQuestion() {
         index === state.currentIndex &&
         window.innerWidth <= 850
       ) {
-        node.scrollIntoView({
-          behavior: "smooth",
-          inline: "center",
-          block: "nearest"
+        const grid = el.questionGrid;
+        const targetLeft =
+          node.offsetLeft -
+          (grid.clientWidth - node.offsetWidth) / 2;
+
+        grid.scrollTo({
+          left: Math.max(0, targetLeft),
+          behavior: "smooth"
         });
       }
     });
@@ -290,14 +294,10 @@ export function showQuestion() {
   el.answerInput.inputMode = "text";
   el.answerInput.value = "";
 
-  // Prevent mobile browsers from scrolling the whole page to the focused input.
-  // The exam already has its intended scroll position.
-  try {
-    el.answerInput.focus({
-      preventScroll: true
-    });
-  } catch (error) {
-    // Older browsers may not support the focus options object.
+  // Do not auto-focus text inputs on phones.
+  // Mobile browsers may scroll/resize the viewport to reveal a focused
+  // input and that can hide the question as soon as the exam starts.
+  if (window.innerWidth > 900) {
     el.answerInput.focus();
   }
 }
