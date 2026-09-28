@@ -12,6 +12,8 @@ import {
 } from "./audio.js";
 import { saveAttemptStats } from "./stats.js";
 
+let lastFocusedElement = null;
+
 function getElements() {
   return {
     modeScreen:
@@ -89,11 +91,13 @@ export function showExitConfirm() {
 
   if (!modal) return;
 
+  lastFocusedElement = document.activeElement;
   modal.classList.add("open");
   modal.setAttribute(
     "aria-hidden",
     "false"
   );
+  document.body.classList.add("modal-open");
 
   const noButton =
     modal.querySelector(
@@ -119,6 +123,15 @@ export function hideExitConfirm() {
     "aria-hidden",
     "true"
   );
+  document.body.classList.remove("modal-open");
+
+  if (
+    lastFocusedElement &&
+    typeof lastFocusedElement.focus === "function"
+  ) {
+    lastFocusedElement.focus();
+    lastFocusedElement = null;
+  }
 }
 
 export function confirmExitExam() {
