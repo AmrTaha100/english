@@ -19,7 +19,113 @@ import {
 import { renderStats } from "./stats.js";
 import { stopCurrentAudio } from "./audio.js";
 
+let actionsBound = false;
+
+function setInteractionEnabled(enabled) {
+  document
+    .querySelectorAll(
+      '[data-action="start-exam"], [data-action="start-practice"]'
+    )
+    .forEach(button => {
+      button.disabled = !enabled;
+    });
+}
+
+function setLoadingState() {
+  const modeScreen =
+    document.getElementById("modeScreen");
+
+  const loadingState =
+    document.getElementById("loadingState");
+
+  const loadError =
+    document.getElementById("loadError");
+
+  modeScreen?.setAttribute(
+    "aria-busy",
+    "true"
+  );
+  modeScreen?.setAttribute(
+    "data-loading",
+    "true"
+  );
+
+  if (loadingState) {
+    loadingState.hidden = false;
+  }
+
+  if (loadError) {
+    loadError.hidden = true;
+  }
+
+  setInteractionEnabled(false);
+}
+
+function setReadyState() {
+  const modeScreen =
+    document.getElementById("modeScreen");
+
+  const loadingState =
+    document.getElementById("loadingState");
+
+  const loadError =
+    document.getElementById("loadError");
+
+  modeScreen?.setAttribute(
+    "aria-busy",
+    "false"
+  );
+  modeScreen?.setAttribute(
+    "data-loading",
+    "false"
+  );
+
+  if (loadingState) {
+    loadingState.hidden = true;
+  }
+
+  if (loadError) {
+    loadError.hidden = true;
+  }
+
+  setInteractionEnabled(true);
+}
+
+function setErrorState() {
+  const modeScreen =
+    document.getElementById("modeScreen");
+
+  const loadingState =
+    document.getElementById("loadingState");
+
+  const loadError =
+    document.getElementById("loadError");
+
+  modeScreen?.setAttribute(
+    "aria-busy",
+    "false"
+  );
+  modeScreen?.setAttribute(
+    "data-loading",
+    "false"
+  );
+
+  if (loadingState) {
+    loadingState.hidden = true;
+  }
+
+  if (loadError) {
+    loadError.hidden = false;
+  }
+
+  setInteractionEnabled(false);
+}
+
 function bindActions() {
+  if (actionsBound) return;
+
+  actionsBound = true;
+
   document.addEventListener(
     "click",
     event => {
@@ -30,7 +136,10 @@ function bindActions() {
 
       if (!target) return;
 
-      switch (target.dataset.action) {
+      const action =
+        target.dataset.action;
+
+      switch (action) {
         case "start-exam":
           startExam(
             target.dataset.mode
@@ -85,6 +194,10 @@ function bindActions() {
           location.reload();
           break;
 
+        case "retry-load":
+          initialize();
+          break;
+
         default:
           break;
       }
@@ -135,6 +248,7 @@ function bindActions() {
 async function initialize() {
   bindActions();
   renderStats();
+  setLoadingState();
 
   try {
     state.vocabulary =
@@ -149,23 +263,16 @@ async function initialize() {
       count.textContent =
         state.vocabulary.length;
     }
+
+    setReadyState();
   } catch (error) {
-    console.error(error);
-
-    const count =
-      document.getElementById(
-        "vocabCount"
-      );
-
-    if (count) {
-      count.textContent = "!";
-      count.title =
-        "تعذر تحميل قائمة الكلمات.";
-    }
-
-    alert(
-      "حصلت مشكلة في تحميل الكلمات. راجع الاتصال وحاول تحديث الصفحة."
+    console.error(
+      "Vocabulary initialization failed:",
+      error
     );
+
+    state.vocabulary = [];
+    setErrorState();
   }
 }
 
