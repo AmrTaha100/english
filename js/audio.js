@@ -22,6 +22,11 @@ function updateSpeakerState(
       ? "إيقاف النطق"
       : "تشغيل النطق الإنجليزي"
   );
+
+  speaker.setAttribute(
+    "aria-pressed",
+    speaking ? "true" : "false"
+  );
 }
 
 export function stopCurrentAudio() {
@@ -38,6 +43,10 @@ export function stopCurrentAudio() {
 
     currentAudio.src = "";
     currentAudio = null;
+  }
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
   }
 
   updateSpeakerState(
