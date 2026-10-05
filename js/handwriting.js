@@ -426,6 +426,24 @@ async function getWorker(language) {
             1
           );
 
+        const { PSM } =
+          await loadTesseract();
+
+        await worker.setParameters({
+          tessedit_pageseg_mode:
+            language === "eng"
+              ? PSM.SINGLE_WORD
+              : PSM.SINGLE_LINE,
+          user_defined_dpi: "300",
+          preserve_interword_spaces: "0",
+          ...(language === "eng"
+            ? {
+                tessedit_char_whitelist:
+                  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-'"
+              }
+            : {})
+        });
+
         workers.set(
           language,
           worker
@@ -484,6 +502,283 @@ export async function prepareHandwritingLanguage(
   }
 }
 
+function getInkBounds(sourceCanvas) {
+  const width = sourceCanvas.width;
+  const height = sourceCanvas.height;
+
+  if (!width || !height) {
+    return null;
+  }
+
+  const sourceContext = sourceCanvas.getContext("2d", {
+    willReadFrequently: true
+  });
+
+  if (!sourceContext) {
+    return null;
+  }
+
+  const pixels = sourceContext.getImageData(
+    0,
+    0,
+    width,
+    height
+  ).data;
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const offset = (y * width + x) * 4;
+      const r = pixels[offset];
+      const g = pixels[offset + 1];
+      const b = pixels[offset + 2];
+
+      if (
+        r < 232 ||
+        g < 232 ||
+        b < 232
+      ) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return null;
+  }
+
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY
+  };
+}
+
+function createOcrCanvas(sourceCanvas, binary = false) {
+  const bounds = getInkBounds(sourceCanvas);
+
+  if (!bounds) {
+    return null;
+  }
+
+  const sourceWidth =
+    bounds.maxX - bounds.minX + 1;
+  const sourceHeight =
+    bounds.maxY - bounds.minY + 1;
+
+  const padding =
+    Math.max(
+      35,
+      Math.round(
+        Math.min(sourceWidth, sourceHeight) * 0.12
+      )
+    );
+
+  const croppedWidth =
+    sourceWidth + padding * 2;
+  const croppedHeight =
+    sourceHeight + padding * 2;
+
+  const targetHeight =
+    binary ? 420 : 380;
+
+  const scale =
+    targetHeight / croppedHeight;
+
+  const targetWidth =
+    Math.min(
+      1800,
+      Math.max(
+        420,
+        Math.round(
+          croppedWidth * scale
+        )
+      )
+    );
+
+  const output =
+    document.createElement("canvas");
+
+  output.width = targetWidth;
+  output.height = targetHeight;
+
+  const outputContext =
+    output.getContext("2d", {
+      alpha: false
+    });
+
+  if (!outputContext) {
+    return null;
+  }
+
+  outputContext.fillStyle =
+    "#ffffff";
+
+  outputContext.fillRect(
+    0,
+    0,
+    targetWidth,
+    targetHeight
+  );
+
+  outputContext.imageSmoothingEnabled =
+    true;
+
+  outputContext.imageSmoothingQuality =
+    "high";
+
+  outputContext.drawImage(
+    sourceCanvas,
+    bounds.minX,
+    bounds.minY,
+    sourceWidth,
+    sourceHeight,
+    padding * scale,
+    padding * scale,
+    sourceWidth * scale,
+    sourceHeight * scale
+  );
+
+  if (!binary) {
+    return output;
+  }
+
+  const image =
+    outputContext.getImageData(
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
+
+  const data = image.data;
+
+  for (
+    let i = 0;
+    i < data.length;
+    i += 4
+  ) {
+    const gray =
+      0.299 * data[i] +
+      0.587 * data[i + 1] +
+      0.114 * data[i + 2];
+
+    const value =
+      gray < 220
+        ? 20
+        : 255;
+
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+    data[i + 3] = 255;
+  }
+
+  outputContext.putImageData(
+    image,
+    0,
+    0
+  );
+
+  return output;
+}
+
+async function recognizeCandidate(
+  worker,
+  image,
+  language
+) {
+  const result =
+    await worker.recognize(
+      image,
+      {},
+      {
+        text: true
+      }
+    );
+
+  const text =
+    normalizeRecognizedText(
+      result?.data?.text
+    );
+
+  const confidence =
+    Number(
+      result?.data?.confidence
+    ) || 0;
+
+  return {
+    text,
+    confidence
+  };
+}
+
+function normalizeForComparison(text, language) {
+  const value =
+    String(text || "");
+
+  if (language === "eng") {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9'\- ]+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  return value
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function chooseCandidate(candidates, language) {
+  const valid =
+    candidates.filter(
+      candidate => candidate.text
+    );
+
+  if (!valid.length) {
+    return {
+      text: "",
+      confidence: 0
+    };
+  }
+
+  valid.sort(
+    (a, b) =>
+      b.confidence - a.confidence
+  );
+
+  const best =
+    valid[0];
+
+  // When two preprocessing passes agree, prefer the shared text.
+  const comparable =
+    normalizeForComparison(
+      best.text,
+      language
+    );
+
+  const agreement =
+    valid.find(
+      candidate =>
+        normalizeForComparison(
+          candidate.text,
+          language
+        ) === comparable
+    );
+
+  return agreement || best;
+}
+
 export async function recognizeHandwriting(
   language = getExpectedLanguage()
 ) {
@@ -522,15 +817,67 @@ export async function recognizeHandwriting(
     const worker =
       await getWorker(language);
 
-    const result =
-      await worker.recognize(canvas);
+    setStatus(
+      "⏳ جاري تحسين الصورة وقراءة الكتابة...",
+      "loading"
+    );
 
-    const text =
-      normalizeRecognizedText(
-        result?.data?.text
+    const primaryImage =
+      createOcrCanvas(
+        canvas,
+        false
       );
 
-    if (!text) {
+    const binaryImage =
+      createOcrCanvas(
+        canvas,
+        true
+      );
+
+    if (!primaryImage) {
+      setStatus(
+        "مش لاقي كتابة واضحة. اكتب الكلمة وجرب تاني.",
+        "error"
+      );
+      return "";
+    }
+
+    const candidates = [];
+
+    const first =
+      await recognizeCandidate(
+        worker,
+        primaryImage,
+        language
+      );
+
+    candidates.push(first);
+
+    if (
+      !first.text ||
+      first.confidence < 78
+    ) {
+      const second =
+        binaryImage
+          ? await recognizeCandidate(
+              worker,
+              binaryImage,
+              language
+            )
+          : null;
+
+      if (second) {
+        candidates.push(second);
+      }
+    }
+
+    const chosen =
+      chooseCandidate(
+        candidates,
+        language
+      );
+
+    if (!chosen.text) {
       setStatus(
         "مش قادر أقرأ الكتابة. اكتب أوضح وجرب تاني.",
         "error"
@@ -539,15 +886,24 @@ export async function recognizeHandwriting(
     }
 
     if (answerInput) {
-      answerInput.value = text;
+      answerInput.value =
+        chosen.text;
     }
 
+    const confidenceNote =
+      chosen.confidence >= 82
+        ? "✅"
+        : "⚠️";
+
     setStatus(
-      "✅ اتقريت. راجع النص لو محتاج تعدّل حاجة، وبعدها أكد الإجابة.",
-      "success"
+      confidenceNote +
+        " اتقريت. راجع النص قبل تأكيد الإجابة.",
+      chosen.confidence >= 82
+        ? "success"
+        : "ready"
     );
 
-    return text;
+    return chosen.text;
   } catch (error) {
     console.error(
       "Handwriting OCR failed:",
@@ -600,7 +956,11 @@ export function prepareHandwritingForQuestion() {
   );
 }
 
-export function isHandwritingMode() {
+// OCR output is never replaced with the expected answer.
+// Recognition cleanup only improves the image and OCR configuration.
+// The user remains responsible for reviewing the detected text.
+//
+// export function isHandwritingMode() {
   const active =
     methodButtons.find(button =>
       button.classList.contains("active")
