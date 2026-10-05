@@ -590,17 +590,17 @@ function createOcrCanvas(sourceCanvas, binary = false) {
   const targetHeight =
     binary ? 420 : 380;
 
-  const scale =
-    targetHeight / croppedHeight;
+  const maxWidth = 1700;
+  const scale = Math.min(
+    targetHeight / croppedHeight,
+    maxWidth / croppedWidth
+  );
 
   const targetWidth =
-    Math.min(
-      1800,
-      Math.max(
-        420,
-        Math.round(
-          croppedWidth * scale
-        )
+    Math.max(
+      420,
+      Math.round(
+        croppedWidth * scale
       )
     );
 
