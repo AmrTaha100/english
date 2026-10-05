@@ -11,6 +11,12 @@ import {
   stopCurrentAudio
 } from "./audio.js";
 import { saveAttemptStats } from "./stats.js";
+import {
+  prepareHandwritingForQuestion,
+  isHandwritingMode,
+  recognizeHandwriting,
+  prepareHandwritingLanguage
+} from "./handwriting.js";
 
 let lastFocusedElement = null;
 let mobileQuestionsLastFocusedElement = null;
@@ -399,6 +405,16 @@ export function showQuestion() {
   el.answerInput.inputMode = "text";
   el.answerInput.value = "";
 
+  prepareHandwritingForQuestion();
+
+  if (isHandwritingMode()) {
+    void prepareHandwritingLanguage(
+      q.direction === "ar-en"
+        ? "eng"
+        : "ara"
+    );
+  }
+
   // Do not auto-focus text inputs on phones.
   // Mobile browsers may scroll/resize the viewport to reveal a focused
   // input and that can hide the question as soon as the exam starts.
@@ -431,15 +447,32 @@ function findNextUnanswered() {
   return -1;
 }
 
-export function submitAnswer() {
+export async function submitAnswer() {
   const q =
     state.questions[state.currentIndex];
 
   if (!q) return;
 
   const el = getElements();
-  const userAnswer =
+  let userAnswer =
     el.answerInput.value.trim();
+
+  if (
+    !userAnswer &&
+    isHandwritingMode()
+  ) {
+    userAnswer = (
+      await recognizeHandwriting(
+        q.direction === "ar-en"
+          ? "eng"
+          : "ara"
+      )
+    ).trim();
+
+    if (userAnswer) {
+      el.answerInput.value = userAnswer;
+    }
+  }
 
   if (!userAnswer) {
     el.answerInput.focus();
