@@ -2158,3 +2158,200 @@ input:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* =========================================================
+   HANDWRITING INPUT
+========================================================= */
+
+.answer-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 4px;
+  border: 1px solid rgba(148,163,184,.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+
+.answer-method-btn {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  transition: .18s ease;
+}
+
+.answer-method-btn:hover {
+  color: #cbd5e1;
+  background: rgba(255,255,255,.045);
+}
+
+.answer-method-btn.active {
+  color: #e0e7ff;
+  border-color: rgba(129,140,248,.22);
+  background: rgba(99,102,241,.12);
+  box-shadow: 0 5px 16px rgba(0,0,0,.12);
+}
+
+.handwriting-panel {
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid rgba(129,140,248,.13);
+  border-radius: 18px;
+  background: rgba(10,16,31,.72);
+}
+
+.handwriting-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.handwriting-heading span {
+  color: #c7d2fe;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.handwriting-heading small {
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.handwriting-heading small[data-status="ready"] {
+  color: #a5b4fc;
+}
+
+.handwriting-heading small[data-status="loading"] {
+  color: #a5b4fc;
+}
+
+.handwriting-heading small[data-status="success"] {
+  color: #86efac;
+}
+
+.handwriting-heading small[data-status="error"] {
+  color: #fca5a5;
+}
+
+.handwriting-canvas {
+  display: block;
+  width: 100%;
+  height: 170px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border: 1px solid rgba(129,140,248,.20);
+  border-radius: 14px;
+  background: #f8fafc;
+  box-shadow:
+    inset 0 0 0 1px rgba(15,23,42,.04),
+    0 10px 30px rgba(0,0,0,.14);
+  cursor: crosshair;
+}
+
+.handwriting-canvas:active {
+  cursor: grabbing;
+}
+
+.handwriting-actions {
+  display: grid;
+  grid-template-columns: minmax(100px, .75fr) 1.25fr;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.handwriting-actions .btn {
+  min-height: 46px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+.handwriting-result-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 11px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.handwriting-result-label span:last-child {
+  color: #475569;
+  font-weight: 600;
+}
+
+.handwriting-panel[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .answer-method {
+    width: 100%;
+    margin-bottom: 9px;
+    justify-content: center;
+  }
+
+  .answer-method-btn {
+    flex: 1;
+    min-height: 40px;
+  }
+
+  .handwriting-panel {
+    margin-bottom: 9px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .handwriting-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .handwriting-heading span {
+    font-size: 11px;
+  }
+
+  .handwriting-heading small {
+    width: 100%;
+    text-align: right;
+    font-size: 9px;
+  }
+
+  .handwriting-canvas {
+    height: 155px;
+    border-radius: 13px;
+  }
+
+  .handwriting-actions .btn {
+    min-height: 49px;
+  }
+
+  .handwriting-result-label {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 380px) {
+  .handwriting-canvas {
+    height: 140px;
+  }
+
+  .handwriting-actions {
+    grid-template-columns: 1fr 1.15fr;
+  }
+}
