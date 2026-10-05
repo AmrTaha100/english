@@ -20,6 +20,7 @@ import {
 } from "./practice.js";
 import { renderStats } from "./stats.js";
 import { stopCurrentAudio } from "./audio.js";
+import { initializeHandwriting, clearHandwriting, recognizeHandwriting } from "./handwriting.js";
 
 let actionsBound = false;
 
@@ -197,7 +198,15 @@ function bindActions() {
           break;
 
         case "submit-answer":
-          submitAnswer();
+          void submitAnswer();
+          break;
+
+        case "clear-handwriting":
+          clearHandwriting();
+          break;
+
+        case "recognize-handwriting":
+          void recognizeHandwriting();
           break;
 
         case "restart":
@@ -306,6 +315,7 @@ function bindActions() {
 
 async function initialize() {
   bindActions();
+  initializeHandwriting();
   renderStats();
   setLoadingState();
 
