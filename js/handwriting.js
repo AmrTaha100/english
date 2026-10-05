@@ -385,6 +385,16 @@ function setMethod(method) {
         : "اكتب الكلمة بإيدك داخل المربع.",
       hasInk ? "ready" : "idle"
     );
+
+    window.requestAnimationFrame(() => {
+      if (!panel.hidden) {
+        applyCanvasScale();
+      }
+    });
+
+    void prepareHandwritingLanguage(
+      getExpectedLanguage()
+    );
   }
 }
 
@@ -570,6 +580,14 @@ export function clearHandwriting() {
 }
 
 export function prepareHandwritingForQuestion() {
+  if (
+    canvas &&
+    !context &&
+    canvas.getBoundingClientRect().width > 0
+  ) {
+    applyCanvasScale();
+  }
+
   clearCanvas(false);
 
   if (answerInput) {
