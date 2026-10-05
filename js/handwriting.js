@@ -2,6 +2,7 @@ let canvas = null;
 let context = null;
 let panel = null;
 let answerInput = null;
+let questionLabel = null;
 let statusEl = null;
 let recognizeButton = null;
 let clearButton = null;
@@ -10,15 +11,21 @@ let isDrawing = false;
 let hasInk = false;
 let lastPoint = null;
 let activePointerId = null;
-let currentWorkerLanguage = null;
-let currentWorkerPromise = null;
+const workers = new Map();
+const workerPromises = new Map();
 let tesseractModulePromise = null;
+let resizeTimer = null;
+
+const ORIGINAL_LABEL = "اكتب الترجمة:";
+const ORIGINAL_PLACEHOLDER = "اكتب إجابتك هنا...";
 
 function getElements() {
   return {
+    answerArea: document.querySelector(".answer-area"),
+    answerInput: document.getElementById("answerInput"),
+    questionLabel: document.querySelector(".question-label"),
     canvas: document.getElementById("handwritingCanvas"),
     panel: document.getElementById("handwritingPanel"),
-    answerInput: document.getElementById("answerInput"),
     status: document.getElementById("handwritingStatus"),
     recognizeButton: document.querySelector('[data-action="recognize-handwriting"]'),
     clearButton: document.querySelector('[data-action="clear-handwriting"]'),
@@ -30,21 +37,130 @@ function getElements() {
 
 function setStatus(message, type = "idle") {
   if (!statusEl) return;
+
   statusEl.textContent = message;
   statusEl.dataset.status = type;
 }
 
-function setupContext() {
+function buildControls(answerArea, input) {
+  if (!answerArea || !input || document.getElementById("handwritingPanel")) {
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+
+  wrapper.innerHTML = `
+    <div
+      class="answer-method"
+      role="group"
+      aria-label="طريقة الإجابة">
+
+      <button
+        class="answer-method-btn active"
+        type="button"
+        data-answer-method="keyboard"
+        aria-pressed="true">
+
+        ⌨️ الكيبورد
+
+      </button>
+
+      <button
+        class="answer-method-btn"
+        type="button"
+        data-answer-method="handwriting"
+        aria-pressed="false">
+
+        ✍️ باليد
+
+      </button>
+
+    </div>
+
+    <div
+      class="handwriting-panel"
+      id="handwritingPanel"
+      hidden>
+
+      <div class="handwriting-heading">
+        <span>✍️ اكتب بإيدك</span>
+        <small id="handwritingStatus" data-status="idle">
+          اكتب الكلمة بإيدك داخل المربع.
+        </small>
+      </div>
+
+      <canvas
+        id="handwritingCanvas"
+        class="handwriting-canvas"
+        aria-label="منطقة الكتابة باليد">
+      </canvas>
+
+      <div class="handwriting-actions">
+        <button
+          class="btn btn-secondary"
+          type="button"
+          data-action="clear-handwriting">
+
+          🗑️ مسح
+
+        </button>
+
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-action="recognize-handwriting">
+
+          ✨ تحويل لنص
+
+        </button>
+      </div>
+
+      <div class="handwriting-result-label">
+        <span>النص المقروء</span>
+        <span>ممكن تعدّله قبل التأكيد</span>
+      </div>
+    </div>
+  `;
+
+  answerArea.insertBefore(wrapper, input);
+}
+
+function applyCanvasScale() {
   if (!canvas) return;
 
   const rect = canvas.getBoundingClientRect();
-  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
 
-  canvas.width = Math.max(1, Math.round(rect.width * dpr));
-  canvas.height = Math.max(1, Math.round(rect.height * dpr));
+  if (!rect.width || !rect.height) {
+    return;
+  }
 
-  context = canvas.getContext("2d", { alpha: false });
-  context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const dpr = Math.max(
+    1,
+    Math.min(window.devicePixelRatio || 1, 2)
+  );
+
+  canvas.width = Math.max(
+    1,
+    Math.round(rect.width * dpr)
+  );
+  canvas.height = Math.max(
+    1,
+    Math.round(rect.height * dpr)
+  );
+
+  context = canvas.getContext("2d", {
+    alpha: false
+  });
+
+  context.setTransform(
+    dpr,
+    0,
+    0,
+    dpr,
+    0,
+    0
+  );
+
   context.lineCap = "round";
   context.lineJoin = "round";
   context.lineWidth = 3.2;
@@ -55,6 +171,7 @@ function setupContext() {
 
 function getPoint(event) {
   const rect = canvas.getBoundingClientRect();
+
   return {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top
@@ -62,11 +179,19 @@ function getPoint(event) {
 }
 
 function drawPoint(point) {
-  if (!context || !lastPoint) return;
+  if (!context || !lastPoint) {
+    return;
+  }
 
   context.beginPath();
-  context.moveTo(lastPoint.x, lastPoint.y);
-  context.lineTo(point.x, point.y);
+  context.moveTo(
+    lastPoint.x,
+    lastPoint.y
+  );
+  context.lineTo(
+    point.x,
+    point.y
+  );
   context.stroke();
 
   lastPoint = point;
@@ -74,16 +199,20 @@ function drawPoint(point) {
 }
 
 function beginDrawing(event) {
-  if (!canvas || !context) return;
+  if (!canvas || !context) {
+    return;
+  }
 
   isDrawing = true;
   activePointerId = event.pointerId;
   lastPoint = getPoint(event);
 
   try {
-    canvas.setPointerCapture(event.pointerId);
+    canvas.setPointerCapture(
+      event.pointerId
+    );
   } catch {
-    // Pointer capture is optional.
+    // Optional browser feature.
   }
 
   context.beginPath();
@@ -98,14 +227,18 @@ function beginDrawing(event) {
   context.fill();
 
   hasInk = true;
-  setStatus("كمّل الكتابة، وبعدها اضغط «تحويل لنص».", "idle");
+
+  setStatus(
+    "كمّل الكتابة، وبعدها اضغط «تحويل لنص».",
+    "idle"
+  );
+
   event.preventDefault();
 }
 
 function continueDrawing(event) {
   if (
     !isDrawing ||
-    !canvas ||
     event.pointerId !== activePointerId
   ) {
     return;
@@ -118,7 +251,10 @@ function continueDrawing(event) {
 function endDrawing(event) {
   if (
     !isDrawing ||
-    (event && event.pointerId !== activePointerId)
+    (
+      event &&
+      event.pointerId !== activePointerId
+    )
   ) {
     return;
   }
@@ -127,29 +263,59 @@ function endDrawing(event) {
   lastPoint = null;
 
   try {
-    canvas.releasePointerCapture(activePointerId);
+    canvas.releasePointerCapture(
+      activePointerId
+    );
   } catch {
-    // Pointer capture may already be released.
+    // Already released.
   }
 
   activePointerId = null;
 
   if (hasInk) {
-    setStatus("الكتابة جاهزة. اضغط «تحويل لنص».", "ready");
+    setStatus(
+      "الكتابة جاهزة. اضغط «تحويل لنص».",
+      "ready"
+    );
   }
 }
 
 function clearCanvas(showMessage = true) {
-  if (!canvas || !context) return;
+  if (!canvas || !context) {
+    return;
+  }
 
   context.save();
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.setTransform(
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+  );
   context.fillStyle = "#f8fafc";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
   context.restore();
 
-  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-  context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const dpr = Math.max(
+    1,
+    Math.min(window.devicePixelRatio || 1, 2)
+  );
+
+  context.setTransform(
+    dpr,
+    0,
+    0,
+    dpr,
+    0,
+    0
+  );
   context.lineCap = "round";
   context.lineJoin = "round";
   context.lineWidth = 3.2;
@@ -161,31 +327,55 @@ function clearCanvas(showMessage = true) {
   activePointerId = null;
 
   if (showMessage) {
-    setStatus("المربع فاضي. اكتب الكلمة بإيدك.", "idle");
+    setStatus(
+      "المربع فاضي. اكتب الكلمة بإيدك.",
+      "idle"
+    );
   }
 }
 
 function setMethod(method) {
-  const handwriting = method === "handwriting";
+  const handwriting =
+    method === "handwriting";
 
   methodButtons.forEach(button => {
-    const active = button.dataset.answerMethod === method;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", active ? "true" : "false");
+    const active =
+      button.dataset.answerMethod === method;
+
+    button.classList.toggle(
+      "active",
+      active
+    );
+
+    button.setAttribute(
+      "aria-pressed",
+      active ? "true" : "false"
+    );
   });
 
   if (panel) {
     panel.hidden = !handwriting;
   }
 
+  if (questionLabel) {
+    questionLabel.textContent =
+      handwriting
+        ? "النص المقروء:"
+        : ORIGINAL_LABEL;
+  }
+
   if (answerInput) {
-    answerInput.hidden = false;
     answerInput.setAttribute(
       "aria-label",
       handwriting
         ? "النص المقروء من الكتابة اليدوية ويمكن تعديله"
         : "اكتب الترجمة"
     );
+
+    answerInput.placeholder =
+      handwriting
+        ? "هيظهر هنا النص اللي اتقرا من الكتابة..."
+        : ORIGINAL_PLACEHOLDER;
   }
 
   if (handwriting) {
@@ -196,12 +386,6 @@ function setMethod(method) {
       hasInk ? "ready" : "idle"
     );
   }
-}
-
-function getExpectedLanguage() {
-  const badge = document.getElementById("modeBadge");
-  const value = badge?.textContent || "";
-  return value.includes("إنجليزي") ? "ara" : "eng";
 }
 
 async function loadTesseract() {
@@ -215,25 +399,41 @@ async function loadTesseract() {
 }
 
 async function getWorker(language) {
-  if (
-    currentWorkerPromise &&
-    currentWorkerLanguage === language
-  ) {
-    return currentWorkerPromise;
+  if (workers.has(language)) {
+    return workers.get(language);
   }
 
-  currentWorkerLanguage = language;
+  if (!workerPromises.has(language)) {
+    workerPromises.set(
+      language,
+      (async () => {
+        const { createWorker } =
+          await loadTesseract();
 
-  currentWorkerPromise = (async () => {
-    const { createWorker } = await loadTesseract();
-    return createWorker(language, 1);
-  })();
+        const worker =
+          await createWorker(
+            language,
+            1
+          );
+
+        workers.set(
+          language,
+          worker
+        );
+
+        return worker;
+      })()
+    );
+  }
 
   try {
-    return await currentWorkerPromise;
+    return await workerPromises.get(
+      language
+    );
   } catch (error) {
-    currentWorkerPromise = null;
-    currentWorkerLanguage = null;
+    workerPromises.delete(
+      language
+    );
     throw error;
   }
 }
@@ -246,29 +446,60 @@ function normalizeRecognizedText(text) {
     .trim();
 }
 
-export async function prepareHandwritingLanguage(language) {
-  if (!["eng", "ara"].includes(language)) return;
+function getExpectedLanguage() {
+  const badge =
+    document.getElementById("modeBadge");
+
+  return (
+    badge?.textContent.includes("إنجليزي")
+      ? "ara"
+      : "eng"
+  );
+}
+
+export async function prepareHandwritingLanguage(
+  language
+) {
+  if (!["eng", "ara"].includes(language)) {
+    return;
+  }
 
   try {
     await getWorker(language);
   } catch (error) {
-    console.warn("Could not prepare handwriting OCR:", error);
+    console.warn(
+      "Could not prepare handwriting OCR:",
+      error
+    );
   }
 }
 
-export async function recognizeHandwriting(language = getExpectedLanguage()) {
+export async function recognizeHandwriting(
+  language = getExpectedLanguage()
+) {
   if (!hasInk || !canvas) {
-    setStatus("اكتب كلمة الأول وبعدين حوّلها لنص.", "error");
+    setStatus(
+      "اكتب كلمة الأول وبعدين حوّلها لنص.",
+      "error"
+    );
     return "";
   }
 
   if (!["eng", "ara"].includes(language)) {
-    setStatus("لغة الكتابة غير مدعومة حاليًا.", "error");
+    setStatus(
+      "لغة الكتابة غير مدعومة حاليًا.",
+      "error"
+    );
     return "";
   }
 
-  if (recognizeButton) recognizeButton.disabled = true;
-  if (clearButton) clearButton.disabled = true;
+  if (recognizeButton) {
+    recognizeButton.disabled = true;
+  }
+
+  if (clearButton) {
+    clearButton.disabled = true;
+  }
 
   setStatus(
     language === "ara"
@@ -278,9 +509,16 @@ export async function recognizeHandwriting(language = getExpectedLanguage()) {
   );
 
   try {
-    const worker = await getWorker(language);
-    const result = await worker.recognize(canvas);
-    const text = normalizeRecognizedText(result?.data?.text);
+    const worker =
+      await getWorker(language);
+
+    const result =
+      await worker.recognize(canvas);
+
+    const text =
+      normalizeRecognizedText(
+        result?.data?.text
+      );
 
     if (!text) {
       setStatus(
@@ -301,77 +539,162 @@ export async function recognizeHandwriting(language = getExpectedLanguage()) {
 
     return text;
   } catch (error) {
-    console.error("Handwriting OCR failed:", error);
+    console.error(
+      "Handwriting OCR failed:",
+      error
+    );
+
     setStatus(
       "حصلت مشكلة في قراءة الكتابة. جرّب تاني.",
       "error"
     );
+
     return "";
   } finally {
-    if (recognizeButton) recognizeButton.disabled = false;
-    if (clearButton) clearButton.disabled = false;
+    if (recognizeButton) {
+      recognizeButton.disabled = false;
+    }
+
+    if (clearButton) {
+      clearButton.disabled = false;
+    }
   }
 }
 
 export function clearHandwriting() {
   clearCanvas(true);
-  if (answerInput) answerInput.value = "";
-  answerInput?.focus();
+
+  if (answerInput) {
+    answerInput.value = "";
+  }
 }
 
 export function prepareHandwritingForQuestion() {
   clearCanvas(false);
-  if (answerInput) answerInput.value = "";
-  setStatus("اكتب الكلمة بإيدك داخل المربع.", "idle");
+
+  if (answerInput) {
+    answerInput.value = "";
+  }
+
+  setStatus(
+    "اكتب الكلمة بإيدك داخل المربع.",
+    "idle"
+  );
 }
 
 export function isHandwritingMode() {
-  const active = methodButtons.find(button =>
-    button.classList.contains("active")
+  const active =
+    methodButtons.find(button =>
+      button.classList.contains("active")
+    );
+
+  return (
+    active?.dataset.answerMethod ===
+    "handwriting"
   );
-  return active?.dataset.answerMethod === "handwriting";
 }
 
 export function initializeHandwriting() {
-  const elements = getElements();
+  const initial =
+    getElements();
 
-  canvas = elements.canvas;
-  panel = elements.panel;
-  answerInput = elements.answerInput;
-  statusEl = elements.status;
-  recognizeButton = elements.recognizeButton;
-  clearButton = elements.clearButton;
-  methodButtons = elements.methodButtons;
+  if (
+    !initial.answerArea ||
+    !initial.answerInput
+  ) {
+    return;
+  }
 
-  if (!canvas || !panel || !answerInput) return;
+  buildControls(
+    initial.answerArea,
+    initial.answerInput
+  );
 
-  setupContext();
+  const elements =
+    getElements();
+
+  answerInput =
+    elements.answerInput;
+  questionLabel =
+    elements.questionLabel;
+  panel =
+    elements.panel;
+  canvas =
+    elements.canvas;
+  statusEl =
+    elements.status;
+  recognizeButton =
+    elements.recognizeButton;
+  clearButton =
+    elements.clearButton;
+  methodButtons =
+    elements.methodButtons;
+
+  if (
+    !canvas ||
+    !panel ||
+    !answerInput
+  ) {
+    return;
+  }
+
+  applyCanvasScale();
 
   methodButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      setMethod(button.dataset.answerMethod);
-    });
+    button.addEventListener(
+      "click",
+      () => {
+        setMethod(
+          button.dataset.answerMethod
+        );
+      }
+    );
   });
 
-  canvas.addEventListener("pointerdown", beginDrawing);
-  canvas.addEventListener("pointermove", continueDrawing);
-  canvas.addEventListener("pointerup", endDrawing);
-  canvas.addEventListener("pointercancel", endDrawing);
-  canvas.addEventListener("pointerleave", event => {
-    if (isDrawing && event.buttons === 0) {
-      endDrawing(event);
+  canvas.addEventListener(
+    "pointerdown",
+    beginDrawing
+  );
+  canvas.addEventListener(
+    "pointermove",
+    continueDrawing
+  );
+  canvas.addEventListener(
+    "pointerup",
+    endDrawing
+  );
+  canvas.addEventListener(
+    "pointercancel",
+    endDrawing
+  );
+
+  window.addEventListener(
+    "resize",
+    () => {
+      window.clearTimeout(
+        resizeTimer
+      );
+
+      resizeTimer =
+        window.setTimeout(
+          () => {
+            applyCanvasScale();
+          },
+          120
+        );
     }
-  });
+  );
 
-  clearButton?.addEventListener("click", clearHandwriting);
-
-  recognizeButton?.addEventListener("click", () => {
-    void recognizeHandwriting();
-  });
-
-  window.addEventListener("resize", () => {
-    setupContext();
-  });
+  window.addEventListener(
+    "beforeunload",
+    () => {
+      workers.forEach(
+        worker => {
+          void worker.terminate();
+        }
+      );
+    }
+  );
 
   setMethod("keyboard");
 }
