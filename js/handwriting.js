@@ -461,9 +461,9 @@ function getExpectedLanguage() {
     document.getElementById("modeBadge");
 
   return (
-    badge?.textContent.includes("إنجليزي")
-      ? "ara"
-      : "eng"
+    badge?.textContent.includes("عربي → إنجليزي")
+      ? "eng"
+      : "ara"
   );
 }
 
