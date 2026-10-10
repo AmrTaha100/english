@@ -11,6 +11,7 @@ let isDrawing = false;
 let hasInk = false;
 let lastPoint = null;
 let activePointerId = null;
+let handwritingVersion = 0;
 const workers = new Map();
 const workerPromises = new Map();
 let tesseractModulePromise = null;
@@ -134,6 +135,29 @@ function applyCanvasScale() {
     return;
   }
 
+  const preservedInk = hasInk;
+  let previousCanvas = null;
+
+  if (preservedInk && canvas.width && canvas.height) {
+    previousCanvas = document.createElement("canvas");
+    previousCanvas.width = canvas.width;
+    previousCanvas.height = canvas.height;
+    previousCanvas
+      .getContext("2d")
+      ?.drawImage(canvas, 0, 0);
+  }
+
+  if (isDrawing && activePointerId !== null) {
+    try {
+      canvas.releasePointerCapture(activePointerId);
+    } catch {
+      // The pointer may already have been released by the browser.
+    }
+  }
+  isDrawing = false;
+  lastPoint = null;
+  activePointerId = null;
+
   const dpr = Math.max(
     1,
     Math.min(window.devicePixelRatio || 1, 2)
@@ -167,6 +191,22 @@ function applyCanvasScale() {
   context.strokeStyle = "#111827";
 
   clearCanvas(false);
+
+  if (previousCanvas) {
+    context.drawImage(
+      previousCanvas,
+      0,
+      0,
+      previousCanvas.width,
+      previousCanvas.height,
+      0,
+      0,
+      rect.width,
+      rect.height
+    );
+    hasInk = true;
+  }
+
 }
 
 function getPoint(event) {
@@ -204,6 +244,7 @@ function beginDrawing(event) {
   }
 
   isDrawing = true;
+  handwritingVersion++;
   activePointerId = event.pointerId;
   lastPoint = getPoint(event);
 
@@ -780,21 +821,34 @@ function chooseCandidate(candidates, language) {
 }
 
 export async function recognizeHandwriting(
-  language = getExpectedLanguage()
+  language = getExpectedLanguage(),
+  {
+    applyToInput = true,
+    isCurrent = () => true
+  } = {}
 ) {
+  const versionAtStart = handwritingVersion;
+  const isActive = () =>
+    handwritingVersion === versionAtStart &&
+    isCurrent();
+
   if (!hasInk || !canvas) {
-    setStatus(
-      "اكتب كلمة الأول وبعدين حوّلها لنص.",
-      "error"
-    );
+    if (isActive()) {
+      setStatus(
+        "اكتب كلمة الأول وبعدين حوّلها لنص.",
+        "error"
+      );
+    }
     return "";
   }
 
   if (!["eng", "ara"].includes(language)) {
-    setStatus(
-      "لغة الكتابة غير مدعومة حاليًا.",
-      "error"
-    );
+    if (isActive()) {
+      setStatus(
+        "لغة الكتابة غير مدعومة حاليًا.",
+        "error"
+      );
+    }
     return "";
   }
 
@@ -806,16 +860,27 @@ export async function recognizeHandwriting(
     clearButton.disabled = true;
   }
 
-  setStatus(
-    language === "ara"
-      ? "⏳ جاري قراءة الكتابة العربية..."
-      : "⏳ جاري قراءة الكتابة الإنجليزية...",
-    "loading"
-  );
+  if (isActive()) {
+    setStatus(
+      language === "ara"
+        ? "⏳ جاري قراءة الكتابة العربية..."
+        : "⏳ جاري قراءة الكتابة الإنجليزية...",
+      "loading"
+    );
+  }
 
   try {
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = canvas.width;
+    sourceCanvas.height = canvas.height;
+    sourceCanvas
+      .getContext("2d")
+      ?.drawImage(canvas, 0, 0);
+
     const worker =
       await getWorker(language);
+
+    if (!isActive()) return "";
 
     setStatus(
       "⏳ جاري تحسين الصورة وقراءة الكتابة...",
@@ -824,13 +889,13 @@ export async function recognizeHandwriting(
 
     const primaryImage =
       createOcrCanvas(
-        canvas,
+        sourceCanvas,
         false
       );
 
     const binaryImage =
       createOcrCanvas(
-        canvas,
+        sourceCanvas,
         true
       );
 
@@ -885,7 +950,9 @@ export async function recognizeHandwriting(
       return "";
     }
 
-    if (answerInput) {
+    if (!isActive()) return "";
+
+    if (applyToInput && answerInput) {
       answerInput.value =
         chosen.text;
     }
@@ -910,10 +977,12 @@ export async function recognizeHandwriting(
       error
     );
 
-    setStatus(
-      "حصلت مشكلة في قراءة الكتابة. جرّب تاني.",
-      "error"
-    );
+    if (isActive()) {
+      setStatus(
+        "حصلت مشكلة في قراءة الكتابة. جرّب تاني.",
+        "error"
+      );
+    }
 
     return "";
   } finally {
@@ -928,6 +997,7 @@ export async function recognizeHandwriting(
 }
 
 export function clearHandwriting() {
+  handwritingVersion++;
   clearCanvas(true);
 
   if (answerInput) {
@@ -936,6 +1006,8 @@ export function clearHandwriting() {
 }
 
 export function prepareHandwritingForQuestion() {
+  handwritingVersion++;
+
   if (
     canvas &&
     !context &&

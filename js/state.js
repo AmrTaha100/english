@@ -4,6 +4,7 @@ export const state = {
   questions: [],
   currentIndex: 0,
   answered: [],
+  skipped: [],
   results: [],
   practiceIndex: 0
 };

@@ -1,6 +1,7 @@
 import { state } from "./state.js";
 import {
   buildQuestions,
+  findNextUnskipped,
   normalizeEnglish,
   normalizeArabic,
   analyzeEnglish
@@ -20,6 +21,14 @@ import {
 
 let lastFocusedElement = null;
 let mobileQuestionsLastFocusedElement = null;
+let activeSubmission = null;
+let questionRenderVersion = 0;
+
+function invalidateActiveSubmission() {
+  activeSubmission = null;
+  const submitButton = document.querySelector('[data-action="submit-answer"]');
+  if (submitButton) submitButton.disabled = false;
+}
 
 function getElements() {
   return {
@@ -72,9 +81,12 @@ export function startExam(selectedMode) {
     return;
   }
 
+  invalidateActiveSubmission();
+
   state.mode = selectedMode;
   state.currentIndex = 0;
   state.answered = [];
+  state.skipped = [];
   state.results = [];
   state.questions =
     buildQuestions(
@@ -163,6 +175,7 @@ export function hideExitConfirm(
 }
 
 export function confirmExitExam() {
+  invalidateActiveSubmission();
   setSpeakerVisibility(false);
   closeMobileQuestions();
   hideExitConfirm(false);
@@ -175,6 +188,7 @@ export function confirmExitExam() {
   state.questions = [];
   state.currentIndex = 0;
   state.answered = [];
+  state.skipped = [];
   state.results = [];
 
   const el = getElements();
@@ -314,6 +328,7 @@ export function showQuestion() {
     state.questions[state.currentIndex];
 
   if (!q) return;
+  questionRenderVersion++;
 
   const el = getElements();
 
@@ -448,73 +463,111 @@ function findNextUnanswered() {
 }
 
 export async function submitAnswer() {
-  const q =
-    state.questions[state.currentIndex];
+  // A token ties this async submission to one rendered question and exam run.
+  if (activeSubmission) return;
 
-  if (!q) return;
+  const questionsAtStart = state.questions;
+  const submittedIndex = state.currentIndex;
+  const modeAtStart = state.mode;
+  const q =
+    questionsAtStart[submittedIndex];
+
+  if (!q || state.answered[submittedIndex]) return;
 
   const el = getElements();
+  const submitButton = document.querySelector('[data-action="submit-answer"]');
+  const buttonWasDisabled = submitButton?.disabled || false;
+  const renderVersionAtStart = questionRenderVersion;
+  const submission = {};
+  activeSubmission = submission;
+  if (submitButton) submitButton.disabled = true;
+
+  const isCurrentSubmission = () =>
+    activeSubmission === submission &&
+    state.questions === questionsAtStart &&
+    state.mode === modeAtStart &&
+    state.currentIndex === submittedIndex &&
+    questionRenderVersion === renderVersionAtStart &&
+    !state.answered[submittedIndex];
+
   let userAnswer =
     el.answerInput.value.trim();
 
-  if (
-    !userAnswer &&
-    isHandwritingMode()
-  ) {
-    userAnswer = (
-      await recognizeHandwriting(
-        q.direction === "ar-en"
-          ? "eng"
-          : "ara"
-      )
-    ).trim();
+  try {
+    if (
+      !userAnswer &&
+      isHandwritingMode()
+    ) {
+      userAnswer = (
+        await recognizeHandwriting(
+          q.direction === "ar-en"
+            ? "eng"
+            : "ara",
+          {
+            applyToInput: false,
+            isCurrent: isCurrentSubmission
+          }
+        )
+      ).trim();
 
-    if (userAnswer) {
-      el.answerInput.value = userAnswer;
+      const answerTypedDuringRecognition =
+        el.answerInput.value.trim();
+      if (answerTypedDuringRecognition) {
+        userAnswer = answerTypedDuringRecognition;
+      }
+    }
+
+    if (!isCurrentSubmission()) return;
+
+    if (!userAnswer) {
+      el.answerInput.focus();
+      return;
+    }
+
+    el.answerInput.value = userAnswer;
+
+    const correctAnswer =
+      q.direction === "ar-en"
+        ? q.en
+        : q.ar;
+
+    const correct =
+      q.direction === "ar-en"
+        ? normalizeEnglish(userAnswer) ===
+          normalizeEnglish(correctAnswer)
+        : normalizeArabic(userAnswer) ===
+          normalizeArabic(correctAnswer);
+
+    state.results[submittedIndex] = {
+      ...q,
+      userAnswer,
+      correctAnswer,
+      correct
+    };
+
+    state.answered[submittedIndex] = true;
+    state.skipped[submittedIndex] = false;
+
+    updateQuestionStatus(submittedIndex, correct);
+
+    const next = findNextUnanswered();
+
+    if (next === -1) {
+      finishExam();
+      return;
+    }
+
+    state.currentIndex = next;
+    showQuestion();
+  } catch (error) {
+    console.error("Could not submit answer:", error);
+    if (isCurrentSubmission()) el.answerInput.focus();
+  } finally {
+    if (activeSubmission === submission) {
+      activeSubmission = null;
+      if (submitButton) submitButton.disabled = buttonWasDisabled;
     }
   }
-
-  if (!userAnswer) {
-    el.answerInput.focus();
-    return;
-  }
-
-  const correctAnswer =
-    q.direction === "ar-en"
-      ? q.en
-      : q.ar;
-
-  const correct =
-    q.direction === "ar-en"
-      ? normalizeEnglish(userAnswer) ===
-        normalizeEnglish(correctAnswer)
-      : normalizeArabic(userAnswer) ===
-        normalizeArabic(correctAnswer);
-
-  state.results[state.currentIndex] = {
-    ...q,
-    userAnswer,
-    correctAnswer,
-    correct
-  };
-
-  state.answered[state.currentIndex] =
-    true;
-
-  updateQuestionStatus(
-    state.currentIndex,
-    correct
-  );
-
-  const next = findNextUnanswered();
-
-  if (next === -1) {
-    finishExam();
-    return;
-  }
-
-  state.currentIndex = next;
-  showQuestion();
 }
 
 export function skipQuestion() {
@@ -522,12 +575,43 @@ export function skipQuestion() {
     return;
   }
 
-  const next = findNextUnanswered();
+  const skippedIndex = state.currentIndex;
+  if (state.answered[skippedIndex]) return;
+
+  state.skipped[skippedIndex] = true;
+  const next = findNextUnskipped(
+    state.questions,
+    state.answered,
+    state.skipped,
+    skippedIndex
+  );
 
   if (next !== -1) {
     state.currentIndex = next;
     showQuestion();
+    return;
   }
+
+  // Skips defer questions until all remaining questions are skipped or answered.
+  state.questions.forEach((question, index) => {
+    if (state.answered[index]) return;
+
+    state.results[index] = {
+      ...question,
+      userAnswer: "",
+      correctAnswer:
+        question.direction === "ar-en"
+          ? question.en
+          : question.ar,
+      correct: false,
+      skipped: true
+    };
+    state.answered[index] = true;
+    state.skipped[index] = true;
+    updateQuestionStatus(index, false);
+  });
+
+  finishExam();
 }
 
 function updateQuestionStatus(

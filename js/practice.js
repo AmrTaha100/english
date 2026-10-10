@@ -48,6 +48,7 @@ export function startPractice() {
   state.questions = [];
   state.currentIndex = 0;
   state.answered = [];
+  state.skipped = [];
   state.results = [];
   state.practiceIndex = 0;
 

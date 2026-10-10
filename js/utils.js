@@ -10,6 +10,22 @@ export function shuffleArray(array, random = Math.random) {
   return shuffled;
 }
 
+export function findNextUnskipped(
+  questions,
+  answered,
+  skipped,
+  currentIndex
+) {
+  if (!questions.length) return -1;
+
+  for (let offset = 1; offset <= questions.length; offset++) {
+    const index = (currentIndex + offset) % questions.length;
+    if (!answered[index] && !skipped[index]) return index;
+  }
+
+  return -1;
+}
+
 export function buildQuestions(
   vocabulary,
   mode,

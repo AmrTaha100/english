@@ -6,6 +6,7 @@ import vocabulary from "../data/vocabulary.json" with { type: "json" };
 
 import {
   shuffleArray,
+  findNextUnskipped,
   buildQuestions,
   normalizeEnglish,
   normalizeArabic,
@@ -30,6 +31,55 @@ test(
     assert.equal(
       vocabulary.at(-1).en,
       "dominant"
+    );
+  }
+);
+
+test(
+  "skip navigation resolves one-question and multiple-skipped cases",
+  () => {
+    const oneQuestion = [{}];
+
+    assert.equal(
+      findNextUnskipped(
+        oneQuestion,
+        [false],
+        [true],
+        0
+      ),
+      -1
+    );
+
+    const multipleQuestions = [{}, {}, {}];
+
+    assert.equal(
+      findNextUnskipped(
+        multipleQuestions,
+        [false, false, false],
+        [true, false, false],
+        0
+      ),
+      1
+    );
+
+    assert.equal(
+      findNextUnskipped(
+        multipleQuestions,
+        [false, false, false],
+        [true, true, true],
+        2
+      ),
+      -1
+    );
+
+    assert.equal(
+      findNextUnskipped(
+        multipleQuestions,
+        [false, true, false],
+        [true, false, true],
+        2
+      ),
+      -1
     );
   }
 );
