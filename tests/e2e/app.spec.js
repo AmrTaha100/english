@@ -43,7 +43,7 @@ async function answerCurrentQuestion(
   expect(item).toBeTruthy();
 
   const answer =
-    badge.includes("عربي")
+    badge.includes("عربي → إنجليزي")
       ? item.en
       : item.ar;
 
@@ -268,14 +268,14 @@ test(
     expect(
       directions.filter(
         value =>
-          value.includes("عربي")
+          value.includes("عربي → إنجليزي")
       ).length
     ).toBe(19);
 
     expect(
       directions.filter(
         value =>
-          value.includes("إنجليزي")
+          value.includes("إنجليزي → عربي")
       ).length
     ).toBe(19);
 
