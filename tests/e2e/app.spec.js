@@ -59,6 +59,19 @@ async function answerCurrentQuestion(
 test(
   "home page loads the vocabulary and exposes accessible controls",
   async ({ page }) => {
+    // Keep browser-side startup failures visible in CI logs.
+    page.on("pageerror", error => {
+      console.log("[browser page error]", error.stack || error.message);
+    });
+    page.on("console", message => {
+      if (message.type() === "error") {
+        console.log("[browser console error]", message.text());
+      }
+    });
+    page.on("requestfailed", request => {
+      console.log("[request failed]", request.url(), request.failure()?.errorText || "");
+    });
+
     await page.goto("/");
 
     await expect(
