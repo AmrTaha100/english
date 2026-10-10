@@ -90,6 +90,15 @@ test(
       page.locator('[data-action="start-practice"]')
     ).toBeEnabled();
 
+    // Check the exam input's accessible name while its label is visible.
+    await page
+      .locator('[data-action="start-exam"][data-mode="ar-en"]')
+      .click();
+
+    await expect(
+      page.locator("#examScreen")
+    ).toBeVisible();
+
     await expect(
       page.locator("#answerInput")
     ).toHaveAccessibleName("اكتب الترجمة:");
