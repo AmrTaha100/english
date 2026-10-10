@@ -369,7 +369,7 @@ function setMethod(method) {
       "aria-label",
       handwriting
         ? "النص المقروء من الكتابة اليدوية ويمكن تعديله"
-        : "اكتب الترجمة"
+        : ORIGINAL_LABEL
     );
 
     answerInput.placeholder =
