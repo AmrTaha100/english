@@ -959,8 +959,8 @@ export function prepareHandwritingForQuestion() {
 // OCR output is never replaced with the expected answer.
 // Recognition cleanup only improves the image and OCR configuration.
 // The user remains responsible for reviewing the detected text.
-//
-// export function isHandwritingMode() {
+
+export function isHandwritingMode() {
   const active =
     methodButtons.find(button =>
       button.classList.contains("active")
