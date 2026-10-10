@@ -36,6 +36,12 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Check JavaScript syntax
+        run: |
+          for file in js/*.js; do
+            node --check "$file"
+          done
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
