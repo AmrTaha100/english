@@ -1,154 +1,230 @@
 [
   {
-    "ar": "يرافق",
-    "en": "accompany"
+    "ar": "يقدم حل وسط / تسوية نزاع",
+    "en": "compromise"
   },
   {
-    "ar": "برمائي",
-    "en": "amphibious"
+    "ar": "ضار",
+    "en": "harmful"
   },
   {
-    "ar": "توسع",
-    "en": "expansion"
+    "ar": "مزدحم",
+    "en": "packed"
   },
   {
-    "ar": "يكشف / يتعرض لـ",
-    "en": "expose"
+    "ar": "مدمر",
+    "en": "destructive"
   },
   {
-    "ar": "يشير إلى",
-    "en": "indicate"
+    "ar": "تفاعل",
+    "en": "interaction"
   },
   {
-    "ar": "يكثف",
-    "en": "intensify"
+    "ar": "قيمة / مستحق / جدير",
+    "en": "worth"
   },
   {
-    "ar": "واسع النطاق",
-    "en": "large-scale"
+    "ar": "ترفيه",
+    "en": "entertainment"
   },
   {
-    "ar": "مدن عملاقة",
-    "en": "megacities"
+    "ar": "ساحق / قاهر",
+    "en": "overwhelming"
   },
   {
-    "ar": "هجرة",
-    "en": "migration"
+    "ar": "في الواقع",
+    "en": "actually"
   },
   {
-    "ar": "يخفف",
-    "en": "mitigate"
+    "ar": "ضروري",
+    "en": "essential"
   },
   {
-    "ar": "ظاهرة",
-    "en": "phenomenon"
+    "ar": "بشكل عام",
+    "en": "overall"
   },
   {
-    "ar": "قدرة / إمكانية / محتمل",
-    "en": "potential"
+    "ar": "متاح",
+    "en": "available"
   },
   {
-    "ar": "مُسَرَّع",
-    "en": "accelerated"
+    "ar": "وجها لوجه",
+    "en": "face-to-face"
   },
   {
-    "ar": "ناشط",
-    "en": "activist"
+    "ar": "حديقة / يركن سيارة",
+    "en": "park"
   },
   {
-    "ar": "تأقلم / تكيف",
-    "en": "adaptation"
+    "ar": "مقعد",
+    "en": "bench"
   },
   {
-    "ar": "عنوان / يخاطب / يتعامل مع",
-    "en": "address"
+    "ar": "يشكل / شكل / استمارة",
+    "en": "form"
   },
   {
-    "ar": "يعترف",
-    "en": "admit"
+    "ar": "يقنع",
+    "en": "persuade"
   },
   {
-    "ar": "يدافع",
-    "en": "advocate"
+    "ar": "مفيد",
+    "en": "beneficial"
   },
   {
-    "ar": "موافقة / اتفاق",
-    "en": "agreement"
+    "ar": "ممتن",
+    "en": "grateful"
   },
   {
-    "ar": "إعلان",
-    "en": "announcement"
+    "ar": "جسدي",
+    "en": "physical"
   },
   {
-    "ar": "تقريبًا",
-    "en": "approximately"
+    "ar": "نسيم",
+    "en": "breeze"
   },
   {
-    "ar": "هندسة معمارية",
-    "en": "architecture"
+    "ar": "ضمان / يضمن",
+    "en": "guarantee"
   },
   {
-    "ar": "منطقة / مساحة",
-    "en": "area"
+    "ar": "مهذب",
+    "en": "polite"
   },
   {
-    "ar": "سلطة",
-    "en": "authority"
+    "ar": "مهتم / محب",
+    "en": "caring"
   },
   {
-    "ar": "متوسط",
-    "en": "average"
+    "ar": "يتعامل مع",
+    "en": "handle"
   },
   {
-    "ar": "وعي",
-    "en": "awareness"
+    "ar": "ممارسة / يمارس",
+    "en": "practice"
   },
   {
-    "ar": "مواطن",
-    "en": "citizen"
+    "ar": "تحدي / يتحدى",
+    "en": "challenge"
   },
   {
-    "ar": "ساحلي",
-    "en": "coastal"
+    "ar": "يخبر",
+    "en": "inform"
   },
   {
-    "ar": "جماعي",
-    "en": "collective"
+    "ar": "سباق",
+    "en": "race"
   },
   {
-    "ar": "مُجمَّع",
-    "en": "combined"
+    "ar": "التواصل",
+    "en": "communication"
   },
   {
-    "ar": "التزام",
-    "en": "commitment"
+    "ar": "اهتمام / يثير اهتماما",
+    "en": "interest"
   },
   {
-    "ar": "مساهم",
-    "en": "contributor"
+    "ar": "توصية",
+    "en": "recommendation"
   },
   {
-    "ar": "حال / تيار",
-    "en": "current"
+    "ar": "يكمل / مكتمل",
+    "en": "complete"
   },
   {
-    "ar": "طلب / يطلب",
-    "en": "demand"
+    "ar": "دائم",
+    "en": "lasting"
   },
   {
-    "ar": "يثبت",
-    "en": "demonstrate"
+    "ar": "علاقة",
+    "en": "relationship"
   },
   {
-    "ar": "تشريد",
-    "en": "displacement"
+    "ar": "وصفي",
+    "en": "descriptive"
   },
   {
-    "ar": "موثق",
-    "en": "documented"
+    "ar": "ذو معنى",
+    "en": "meaningful"
   },
   {
-    "ar": "سائد / مسيطر",
-    "en": "dominant"
+    "ar": "يطلق / إطلاق",
+    "en": "release"
+  },
+  {
+    "ar": "بالرغم من",
+    "en": "despite"
+  },
+  {
+    "ar": "ذكريات",
+    "en": "memories"
+  },
+  {
+    "ar": "رد / يرد",
+    "en": "reply"
+  },
+  {
+    "ar": "تفاصيل",
+    "en": "details"
+  },
+  {
+    "ar": "يذكر",
+    "en": "mention"
+  },
+  {
+    "ar": "جدول / يجدول",
+    "en": "schedule"
+  },
+  {
+    "ar": "يطور",
+    "en": "develop"
+  },
+  {
+    "ar": "لابد من مشاهدته",
+    "en": "must-see"
+  },
+  {
+    "ar": "خلال / عبر",
+    "en": "throughout"
+  },
+  {
+    "ar": "مخيب للآمال / محبط",
+    "en": "disappointing"
+  },
+  {
+    "ar": "مناسبة",
+    "en": "occasion"
+  },
+  {
+    "ar": "لا ينسى",
+    "en": "unforgettable"
+  },
+  {
+    "ar": "جهد",
+    "en": "effort"
+  },
+  {
+    "ar": "زيتون",
+    "en": "olive"
+  },
+  {
+    "ar": "تعاطف",
+    "en": "empathy"
+  },
+  {
+    "ar": "خيارات",
+    "en": "options"
+  },
+  {
+    "ar": "يتعجب / يتساءل",
+    "en": "wonder"
+  },
+  {
+    "ar": "ممتع",
+    "en": "enjoyable"
+  },
+  {
+    "ar": "يطلب / يأمر / طلب",
+    "en": "order"
   }
 ]
