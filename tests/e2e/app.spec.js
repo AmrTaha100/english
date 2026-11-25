@@ -157,7 +157,7 @@ test(
 
     await expect(
       page.locator("#vocabCount")
-    ).toHaveText("38");
+    ).toHaveText("57");
 
     await expect(
       page.locator("#loadingState")
@@ -234,7 +234,7 @@ test(
 
     await expect(
       page.locator("#vocabCount")
-    ).toHaveText("38");
+    ).toHaveText("57");
 
     await expect(
       page.locator("#loadError")
@@ -247,7 +247,7 @@ test(
 );
 
 test(
-  "exam completes all 38 shuffled questions",
+  "exam completes all 57 shuffled questions",
   async ({ page }) => {
     await page.goto("/");
 
@@ -298,7 +298,7 @@ test(
       page.locator("#resultsScreen")
     ).toBeVisible();
 
-    expect(new Set(seen).size).toBe(38);
+    expect(new Set(seen).size).toBe(57);
 
     expect(
       seen.some(
@@ -309,12 +309,12 @@ test(
 
     await expect(
       page.locator("#finalScore")
-    ).toHaveText("38 / 38");
+    ).toHaveText("57 / 57");
   }
 );
 
 test(
-  "mixed mode keeps an even 19/19 split",
+  "mixed mode keeps an balanced 29/28 split",
   async ({ page }) => {
     await page.goto("/");
 
@@ -351,18 +351,18 @@ test(
         value =>
           value.includes("عربي → إنجليزي")
       ).length
-    ).toBe(19);
+    ).toBe(29);
 
     expect(
       directions.filter(
         value =>
           value.includes("إنجليزي → عربي")
       ).length
-    ).toBe(19);
+    ).toBe(28);
 
     await expect(
       page.locator("#finalScore")
-    ).toHaveText("38 / 38");
+    ).toHaveText("57 / 57");
   }
 );
 
@@ -385,7 +385,7 @@ test(
 
     await expect(
       page.locator("#practiceProgress")
-    ).toHaveText("1 / 38");
+    ).toHaveText("1 / 57");
 
     await page
       .locator('[data-action="practice-next"]')
@@ -393,7 +393,7 @@ test(
 
     await expect(
       page.locator("#practiceProgress")
-    ).toHaveText("2 / 38");
+    ).toHaveText("2 / 57");
 
     await page
       .locator('[data-action="practice-previous"]')
@@ -401,7 +401,7 @@ test(
 
     await expect(
       page.locator("#practiceProgress")
-    ).toHaveText("1 / 38");
+    ).toHaveText("1 / 57");
   }
 );
 
@@ -420,7 +420,7 @@ test(
     });
 
     await expect(page.locator("#progressText"))
-      .toHaveText("السؤال 2 من 38");
+      .toHaveText("السؤال 2 من 57");
     await expect(page.locator(".q-number.correct, .q-number.wrong"))
       .toHaveCount(1);
   }
@@ -437,7 +437,7 @@ test(
 
     const nextQuestion = await page.locator("#questionText").innerText();
     await expect(page.locator("#progressText"))
-      .toHaveText("السؤال 2 من 38");
+      .toHaveText("السؤال 2 من 57");
     await expect(page.locator("#answerInput")).toHaveValue("");
 
     await page.waitForTimeout(650);
@@ -462,11 +462,11 @@ test(
       .toContainText("حصلت مشكلة");
     await expect(submit).toBeEnabled();
     await expect(page.locator("#progressText"))
-      .toHaveText("السؤال 1 من 38");
+      .toHaveText("السؤال 1 من 57");
 
     await submit.click();
     await expect(page.locator("#progressText"))
-      .toHaveText("السؤال 2 من 38");
+      .toHaveText("السؤال 2 من 57");
     await expect(page.locator(".q-number.correct, .q-number.wrong"))
       .toHaveCount(1);
   }
@@ -532,8 +532,8 @@ test(
 
     await page.locator('[data-action="skip-question"]').click();
     await expect(page.locator("#resultsScreen")).toBeVisible();
-    await expect(page.locator("#finalScore")).toHaveText("37 / 38");
-    await expect(page.locator(".result-item")).toHaveCount(38);
+    await expect(page.locator("#finalScore")).toHaveText("56 / 57");
+    await expect(page.locator(".result-item")).toHaveCount(57);
     await expect(page.locator(".result-item.wrong").last())
       .toContainText("لم تتم الإجابة");
   }
@@ -562,7 +562,7 @@ test(
       .toHaveText(skippedQuestion);
     await answerCurrentQuestion(page, vocabulary);
     await expect(page.locator("#resultsScreen")).toBeVisible();
-    await expect(page.locator("#finalScore")).toHaveText("38 / 38");
+    await expect(page.locator("#finalScore")).toHaveText("57 / 57");
 
     await page.locator('[data-action="restart"]').click();
     await expect(page.locator("#modeScreen")).toBeVisible();
@@ -575,8 +575,8 @@ test(
     }
 
     await expect(page.locator("#resultsScreen")).toBeVisible();
-    await expect(page.locator("#finalScore")).toHaveText("0 / 38");
-    await expect(page.locator(".result-item")).toHaveCount(38);
+    await expect(page.locator("#finalScore")).toHaveText("0 / 57");
+    await expect(page.locator(".result-item")).toHaveCount(57);
     await expect(page.locator(".result-item.wrong").first())
       .toContainText("لم تتم الإجابة");
   }
