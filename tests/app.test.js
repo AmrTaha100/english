@@ -16,21 +16,21 @@ import {
 } from "../js/utils.js";
 
 test(
-  "vocabulary source contains exactly 38 entries",
+  "vocabulary source contains exactly 57 entries",
   () => {
     assert.equal(
       vocabulary.length,
-      38
+      57
     );
 
     assert.equal(
       vocabulary[0].en,
-      "accompany"
+      "compromise"
     );
 
     assert.equal(
       vocabulary.at(-1).en,
-      "dominant"
+      "order"
     );
   }
 );
@@ -128,12 +128,12 @@ test(
 
     assert.equal(
       arEn.length,
-      38
+      57
     );
 
     assert.equal(
       enAr.length,
-      38
+      57
     );
 
     assert.ok(
@@ -151,7 +151,7 @@ test(
 );
 
 test(
-  "mixed mode splits 38 words into 19 + 19",
+  "mixed mode splits 57 words into 29 + 28",
   () => {
     const mixed =
       buildQuestions(
@@ -162,21 +162,21 @@ test(
 
     assert.equal(
       mixed.length,
-      38
+      57
     );
 
     assert.equal(
       mixed.filter(
         q => q.direction === "ar-en"
       ).length,
-      19
+      29
     );
 
     assert.equal(
       mixed.filter(
         q => q.direction === "en-ar"
       ).length,
-      19
+      28
     );
   }
 );
@@ -266,7 +266,7 @@ test(
 
     assert.equal(
       parsed.length,
-      38
+      57
     );
   }
 );
