@@ -314,7 +314,7 @@ test(
 );
 
 test(
-  "mixed mode keeps an balanced 29/28 split",
+  "mixed mode keeps a balanced 29/28 split",
   async ({ page }) => {
     await page.goto("/");
 
